@@ -1,0 +1,6 @@
+30 0 * * * python3 /app/manage_mo.py runcrons >> /app/logs/cronjob_mo.log 2>&1
+03 11 * * * python3 /app/manage_mo.py import_lotus_vessel_to_dbca_table >> /app/logs/import_lotus_vessel_to_dbca_table.log 2>&1
+*/1 * * * * python3 /app/manage_mo.py check_for_payments_not_linked_to_booking >> /app/logs/check_for_payments_not_linked_to_booking.log 2>&1
+*/2 * * * * python3 /app/manage_mo.py rebuild_mooring_changed_booking >> /app/logs/rebuild_mooring_changed_booking.log 2>&1
+15 9 * * * python3 /app/manage_mo.py bpoint_ledger_payment_audit_report >> /app/logs/bpoint_ledger_payment_audit_report.log 2>&1
+10 9 * * 0 python3 /app/manage_mo.py appmonitor_check >> /app/logs/appmonitor_check.log 2>&1
