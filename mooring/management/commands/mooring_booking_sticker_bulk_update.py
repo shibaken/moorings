@@ -66,7 +66,7 @@ class Command(BaseCommand):
          "booking_errors": booking_errors 
         }
 
-        email_list = []
+        email_list = [email,]
         for email_to in settings.NOTIFICATION_EMAIL.split(","):
                email_list.append(email_to)
 
