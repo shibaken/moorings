@@ -39,6 +39,58 @@ from mooring import models
 
 logger = logging.getLogger('booking_checkout')
 
+# Cookie names used to detect stale multi-tab checkout submissions (see .github/plans/multi-tab-concurrency-control.md)
+ACTIVE_BOOKING_COOKIE_NAME = 'active_booking_token'
+ACTIVE_ADMISSIONS_COOKIE_NAME = 'active_admissions_token'
+
+
+def set_active_booking_cookie(response, booking):
+    """Mark this booking's UUID as the active tab for the Booking checkout flow."""
+    response.set_cookie(
+        ACTIVE_BOOKING_COOKIE_NAME, str(booking.uuid),
+        max_age=settings.BOOKING_TIMEOUT, path='/', samesite='Lax',
+        secure=not settings.DEBUG, httponly=True
+    )
+    return response
+
+
+def validate_booking_cookie(request, booking):
+    """Return True if this request's active-booking cookie matches the given booking."""
+    active_cookie_token = request.COOKIES.get(ACTIVE_BOOKING_COOKIE_NAME)
+    if active_cookie_token is None:
+        # No cookie set yet (e.g. very first tab) - treat as valid, nothing to conflict with.
+        return True
+    return active_cookie_token == str(booking.uuid)
+
+
+def clear_booking_cookie(response):
+    response.delete_cookie(ACTIVE_BOOKING_COOKIE_NAME, path='/')
+    return response
+
+
+def set_active_admissions_cookie(response, admissions_booking):
+    """Mark this admissions booking's UUID as the active tab for the Admissions checkout flow."""
+    response.set_cookie(
+        ACTIVE_ADMISSIONS_COOKIE_NAME, str(admissions_booking.uuid),
+        max_age=settings.OSCAR_BASKET_COOKIE_LIFETIME, path='/', samesite='Lax',
+        secure=settings.OSCAR_BASKET_COOKIE_SECURE, httponly=True
+    )
+    return response
+
+
+def validate_admissions_cookie(request, admissions_booking):
+    """Return True if this request's active-admissions cookie matches the given admissions booking."""
+    active_cookie_token = request.COOKIES.get(ACTIVE_ADMISSIONS_COOKIE_NAME)
+    if active_cookie_token is None:
+        return True
+    return active_cookie_token == str(admissions_booking.uuid)
+
+
+def clear_admissions_cookie(response):
+    response.delete_cookie(ACTIVE_ADMISSIONS_COOKIE_NAME, path='/')
+    return response
+
+
 def create_booking_by_class(campground_id, campsite_class_id, start_date, end_date, num_adult=0, num_concession=0, num_child=0, num_infant=0, num_mooring=0, vessel_size=0):
     logger.info(f'in create_booking_by_class: {campground_id}, {campsite_class_id}, {start_date}, {end_date}, {num_adult}, {num_concession}, {num_child}, {num_infant}, {num_mooring}, {vessel_size}')
 
