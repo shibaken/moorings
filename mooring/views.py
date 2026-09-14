@@ -1050,6 +1050,13 @@ class MakeBookingsView(TemplateView):
         booking_uuid = kwargs.get('booking_uuid')
         booking = utils.get_booking_from_uuid_or_session(booking_uuid, request.session)
 
+        # TEMP DEBUG (multi-tab concurrency control): trace cookie state on every GET/refresh.
+        logger.info(
+            'MakeBookingsView.get: booking_uuid=%s, active_booking_token=%s, cookie_valid=%s',
+            booking_uuid, request.COOKIES.get(utils.ACTIVE_BOOKING_COOKIE_NAME),
+            utils.validate_booking_cookie(request, booking) if booking else None
+        )
+
         if booking is None or booking.expiry_time is None:
            messages.error(self.request, 'Sorry your booking has expired')
            return HttpResponseRedirect(reverse('map'))
@@ -1136,7 +1143,12 @@ class MakeBookingsView(TemplateView):
                 form = MakeBookingsForm(form_context)
 
         vehicles = VehicleInfoFormset()
-        return self.render_page(request, booking, form, vehicles)
+        response = self.render_page(request, booking, form, vehicles)
+        # Re-activate this tab's booking as the valid one for checkout (multi-tab concurrency control)
+        response = utils.set_active_booking_cookie(response, booking)
+        # TEMP DEBUG (multi-tab concurrency control): confirm the cookie was overwritten for this tab.
+        logger.info('MakeBookingsView.get: active_booking_token reset to booking_uuid=%s', booking_uuid)
+        return response
 
 
     def post(self, request, *args, **kwargs):
@@ -1193,6 +1205,20 @@ class MakeBookingsView(TemplateView):
         # re-render the page if the form doesn't validate
         if (not form.is_valid()) or (not vehicles.is_valid()):
             return self.render_page(request, booking, form, vehicles, show_errors=True)
+
+        # Abort checkout if another tab has since activated a different booking (multi-tab concurrency control)
+        cookie_valid = utils.validate_booking_cookie(request, booking)
+        # TEMP DEBUG (multi-tab concurrency control): trace cookie state on every POST/submit.
+        logger.info(
+            'MakeBookingsView.post: booking_uuid=%s, active_booking_token=%s, cookie_valid=%s',
+            booking_uuid, request.COOKIES.get(utils.ACTIVE_BOOKING_COOKIE_NAME), cookie_valid
+        )
+        if not cookie_valid:
+            messages.warning(self.request, 'A newer booking session was opened in another tab. Please continue in the active tab or refresh this page.')
+            # Redirect (instead of re-rendering) so a browser refresh issues a fresh GET - which
+            # re-activates this tab's cookie - rather than resubmitting this stale POST again.
+            return HttpResponseRedirect(reverse('public_make_booking_uuid', args=(booking.uuid,)))
+
         # update the booking object with information from the form
         if not booking.details:
             booking.details = {}
@@ -3032,7 +3058,11 @@ class AdmissionsBookingSuccessView(TemplateView):
                 except Exception as e:
                     logger.warning(f'Email sending failed in AdmissionsBookingSuccessView: {e}')
 
-            return render(request, self.template_name, context)
+            response = render(request, self.template_name, context)
+            # Admissions booking is confirmed, so both checkout cookies can be cleared (multi-tab concurrency control)
+            utils.clear_admissions_cookie(response)
+            response.delete_cookie(settings.OSCAR_BASKET_COOKIE_OPEN, path='/')
+            return response
 
         except Exception as e:
             logger.error(f'Error in AdmissionsBookingSuccessView: {str(e)}', exc_info=True)
@@ -3216,7 +3246,9 @@ class BookingSuccessView(TemplateView):
             if not was_already_processed:
                 booking.send_payment_emails(context)
 
-            return render(request, self.template_name, context)
+            response = render(request, self.template_name, context)
+            # Booking is confirmed, so the active-booking cookie no longer needs to be tracked (multi-tab concurrency control)
+            return utils.clear_booking_cookie(response)
         except Exception as e:
             logger.error('Error in BookingSuccessView: {}'.format(e))
             return redirect('home')
