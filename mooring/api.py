@@ -2345,6 +2345,11 @@ class AvailabilityAdminViewSet(BaseAvailabilityViewSet):
 @require_http_methods(['POST'])
 def create_admissions_booking(request, *args, **kwargs):
 
+    # Cancel any still-incomplete admissions booking left behind by a superseded tab (multi-tab concurrency control)
+    stale_token = request.COOKIES.get(utils.ACTIVE_ADMISSIONS_COOKIE_NAME)
+    if stale_token:
+        AdmissionsBooking.objects.filter(uuid=stale_token, booking_type=3).update(booking_type=4)
+
     location_text = request.POST.get('location')
     location = AdmissionsLocation.objects.filter(key=location_text)[0]
 

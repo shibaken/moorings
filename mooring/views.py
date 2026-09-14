@@ -3040,7 +3040,11 @@ class AdmissionsBookingSuccessView(TemplateView):
                 except Exception as e:
                     logger.warning(f'Email sending failed in AdmissionsBookingSuccessView: {e}')
 
-            return render(request, self.template_name, context)
+            response = render(request, self.template_name, context)
+            # Admissions booking is confirmed, so both checkout cookies can be cleared (multi-tab concurrency control)
+            utils.clear_admissions_cookie(response)
+            response.delete_cookie(settings.OSCAR_BASKET_COOKIE_OPEN, path='/')
+            return response
 
         except Exception as e:
             logger.error(f'Error in AdmissionsBookingSuccessView: {str(e)}', exc_info=True)

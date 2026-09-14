@@ -1890,6 +1890,8 @@ def admissionsCheckout(request, admissionsBooking, lines, invoice_text=None, vou
             max_age=settings.OSCAR_BASKET_COOKIE_LIFETIME,
             secure=settings.OSCAR_BASKET_COOKIE_SECURE, httponly=True
         )
+        # Mark this tab as the owner of the basket cookie (multi-tab concurrency control)
+        set_active_admissions_cookie(responseJson, admissionsBooking)
     return responseJson
 
 def get_basket(request):
