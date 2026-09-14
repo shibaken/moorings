@@ -1136,7 +1136,9 @@ class MakeBookingsView(TemplateView):
                 form = MakeBookingsForm(form_context)
 
         vehicles = VehicleInfoFormset()
-        return self.render_page(request, booking, form, vehicles)
+        response = self.render_page(request, booking, form, vehicles)
+        # Re-activate this tab's booking as the valid one for checkout (multi-tab concurrency control)
+        return utils.set_active_booking_cookie(response, booking)
 
 
     def post(self, request, *args, **kwargs):
@@ -1193,6 +1195,12 @@ class MakeBookingsView(TemplateView):
         # re-render the page if the form doesn't validate
         if (not form.is_valid()) or (not vehicles.is_valid()):
             return self.render_page(request, booking, form, vehicles, show_errors=True)
+
+        # Abort checkout if another tab has since activated a different booking (multi-tab concurrency control)
+        if not utils.validate_booking_cookie(request, booking):
+            messages.warning(self.request, 'A newer booking session was opened in another tab. Please continue in the active tab or refresh this page.')
+            return self.render_page(request, booking, form, vehicles, show_errors=True)
+
         # update the booking object with information from the form
         if not booking.details:
             booking.details = {}
@@ -3216,7 +3224,9 @@ class BookingSuccessView(TemplateView):
             if not was_already_processed:
                 booking.send_payment_emails(context)
 
-            return render(request, self.template_name, context)
+            response = render(request, self.template_name, context)
+            # Booking is confirmed, so the active-booking cookie no longer needs to be tracked (multi-tab concurrency control)
+            return utils.clear_booking_cookie(response)
         except Exception as e:
             logger.error('Error in BookingSuccessView: {}'.format(e))
             return redirect('home')
