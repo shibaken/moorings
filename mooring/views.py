@@ -3062,6 +3062,7 @@ class AdmissionsBookingSuccessView(TemplateView):
             # Admissions booking is confirmed, so both checkout cookies can be cleared (multi-tab concurrency control)
             utils.clear_admissions_cookie(response)
             response.delete_cookie(settings.OSCAR_BASKET_COOKIE_OPEN, path='/')
+            response.delete_cookie('checkouthash', path='/')
             return response
 
         except Exception as e:
@@ -3248,7 +3249,9 @@ class BookingSuccessView(TemplateView):
 
             response = render(request, self.template_name, context)
             # Booking is confirmed, so the active-booking cookie no longer needs to be tracked (multi-tab concurrency control)
-            return utils.clear_booking_cookie(response)
+            response = utils.clear_booking_cookie(response)
+            response.delete_cookie('checkouthash', path='/')
+            return response
         except Exception as e:
             logger.error('Error in BookingSuccessView: {}'.format(e))
             return redirect('home')
