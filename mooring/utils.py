@@ -2264,12 +2264,33 @@ def calculate_checkouthash_from_admissions_uuid(admissions_uuid):
     return hashlib.sha256(str(admissions_uuid).encode('utf-8')).hexdigest()
 
 
+def calculate_checkouthash_from_booking_uuid(booking_uuid):
+    # Derive checkouthash from Booking UUID stored in active_booking_token cookie
+    if not booking_uuid:
+        return None
+    try:
+        booking = Booking.objects.get(uuid=booking_uuid)
+        return calculate_checkouthash_from_booking_id(booking.id)
+    except Booking.DoesNotExist:
+        # Fallback to hashing the raw UUID string
+        return hashlib.sha256(str(booking_uuid).encode('utf-8')).hexdigest()
+
+
 def calculate_checkouthash_from_request(request):
-    # Return the checkouthash for whichever flow (Booking or AdmissionsBooking) is currently
-    # active for this request, or None if neither applies (e.g. annual admissions, invoice payment).
+    # Return the checkouthash for whichever flow is currently active
+    # 1. Booking flow: check active_booking_token cookie first, then fallback to session
+    booking_token = request.COOKIES.get(ACTIVE_BOOKING_COOKIE_NAME)
+    if booking_token:
+        return calculate_checkouthash_from_booking_uuid(booking_token)
     if 'ps_booking' in request.session:
         return calculate_checkouthash_from_booking_id(int(request.session['ps_booking']))
-    return calculate_checkouthash_from_admissions_uuid(request.COOKIES.get(ACTIVE_ADMISSIONS_COOKIE_NAME))
+
+    # 2. Admissions flow: check active_admissions_token cookie
+    admissions_token = request.COOKIES.get(ACTIVE_ADMISSIONS_COOKIE_NAME)
+    if admissions_token:
+        return calculate_checkouthash_from_admissions_uuid(admissions_token)
+
+    return None
 
 
 def validate_payment_checkouthash(request, expected_hash):
