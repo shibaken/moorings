@@ -5,7 +5,7 @@ from mooring import helpers
 import json
 import logging
 
-from mooring.utils import calculate_checkouthash_from_booking_id
+from mooring import utils
 
 
 logger = logging.getLogger(__name__)
@@ -27,10 +27,7 @@ def mooring_url(request):
     is_payment_officer = False
     is_customer = False
 
-    if 'ps_booking' in request.session:
-        checkouthash = calculate_checkouthash_from_booking_id(int(request.session["ps_booking"]))
-    else:
-        checkouthash = None
+    checkouthash = utils.calculate_checkouthash_from_request(request)
 
     failed_refund_count = 0
     if authed:
@@ -50,6 +47,7 @@ def mooring_url(request):
     mooring_url['IS_CUSTOMER'] = is_customer
     mooring_url['template_group'] = 'ria'
     mooring_url['checkouthash'] = checkouthash
+    mooring_url['payment_csrf_field_name'] = utils.PAYMENT_CSRF_COOKIE_FIELD
 
     return mooring_url
  

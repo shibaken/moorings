@@ -2250,6 +2250,67 @@ def calculate_checkouthash_from_booking_id(booking_id):
         checkouthash = hashlib.sha256(str(mooringsite_booking_ids).encode('utf-8')).hexdigest()
     return checkouthash
 
+# Name of the field in the Ledger-rendered payment form whose value is used to key the
+# per-tab validation cookie (see Design Decision 7). CONFIRM THIS against a running instance
+# per the §2 blocking investigation task before implementing Phase 3/4.
+PAYMENT_CSRF_COOKIE_FIELD = 'payment-csrfmiddlewaretoken'
+
+
+def calculate_checkouthash_from_admissions_uuid(admissions_uuid):
+    # Hash of the AdmissionsBooking UUID already stored in the active_admissions_token cookie;
+    # AdmissionsBooking's checkout is stateless (no session key), so the cookie is the source of truth.
+    if not admissions_uuid:
+        return None
+    return hashlib.sha256(str(admissions_uuid).encode('utf-8')).hexdigest()
+
+
+def calculate_checkouthash_from_booking_uuid(booking_uuid):
+    # Derive checkouthash from Booking UUID stored in active_booking_token cookie
+    if not booking_uuid:
+        return None
+    try:
+        booking = Booking.objects.get(uuid=booking_uuid)
+        return calculate_checkouthash_from_booking_id(booking.id)
+    except Booking.DoesNotExist:
+        # Fallback to hashing the raw UUID string
+        return hashlib.sha256(str(booking_uuid).encode('utf-8')).hexdigest()
+
+
+def calculate_checkouthash_from_request(request):
+    # Return the checkouthash for whichever flow is currently active
+    # 1. Booking flow: check active_booking_token cookie first, then fallback to session
+    booking_token = request.COOKIES.get(ACTIVE_BOOKING_COOKIE_NAME)
+    if booking_token:
+        return calculate_checkouthash_from_booking_uuid(booking_token)
+    if 'ps_booking' in request.session:
+        return calculate_checkouthash_from_booking_id(int(request.session['ps_booking']))
+
+    # 2. Admissions flow: check active_admissions_token cookie
+    admissions_token = request.COOKIES.get(ACTIVE_ADMISSIONS_COOKIE_NAME)
+    if admissions_token:
+        return calculate_checkouthash_from_admissions_uuid(admissions_token)
+
+    return None
+
+
+def validate_payment_checkouthash(request, expected_hash):
+    # Mandatory three-way check (see Design Decision 7): a plain checkouthash-cookie-vs-expected_hash
+    # comparison cannot detect a stale tab's POST, because both values are shared browser-wide and
+    # get overwritten the instant a second tab acts. The CSRF-keyed validation_cookie is looked up
+    # by the token submitted in *this* POST, so it always reflects the specific tab/render that
+    # produced this exact submission, regardless of what any other tab has since overwritten.
+    #
+    # Only call this for the actual payment POST (method == 'POST' and path startswith
+    # '/ledger-api/process-payment'). On a GET (e.g. '/ledger-api/payment-details' loading),
+    # request.POST is always empty, so csrf_token/validation_cookie would always be None and this
+    # would always return False — see the middleware's GET/POST branch in Phase 3.
+    if not expected_hash:
+        return False
+    checkouthash_cookie = request.COOKIES.get('checkouthash')
+    csrf_token = request.POST.get(PAYMENT_CSRF_COOKIE_FIELD)
+    validation_cookie = request.COOKIES.get(csrf_token) if csrf_token else None
+    return checkouthash_cookie == expected_hash and checkouthash_cookie == validation_cookie
+
 def set_session_checkouthash(session, hash):
     session['checkouthash'] = hash
     session.modified = True

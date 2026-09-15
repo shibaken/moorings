@@ -2,3 +2,51 @@
 
 {% block page_content_inner_top %}
 {% endblock %}
+
+{% block custom_js %}
+{{ block.super }}
+{% if checkouthash %}
+<script>
+    (function() {
+        function createCookie(name, value) {
+            document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + "; path=/";
+        }
+
+        function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+            }
+            return null;
+        }
+
+        var expectedCheckoutHash = "{{ checkouthash }}";
+        createCookie('checkouthash', expectedCheckoutHash);
+
+        // Mandatory second cookie (Design Decision 7): keyed by the payment form's own CSRF-equivalent
+        // token, so it stays fixed to *this* tab/render even after another tab overwrites 'checkouthash'.
+        // Re-attempted every tick since the Ledger gateway's form (#content-payment-body) may still be
+        // loading asynchronously when this script first runs.
+        function writeValidationCookie() {
+            var csrfInput = document.getElementById('{{ payment_csrf_field_name }}');
+            if (csrfInput) {
+                createCookie(csrfInput.value, expectedCheckoutHash);
+            }
+        }
+        writeValidationCookie();
+
+        // If another tab overwrites the shared checkouthash cookie with a different booking's
+        // hash, this tab is stale: leave the payment page before the user can submit payment.
+        setInterval(function() {
+            writeValidationCookie();
+            if (readCookie('checkouthash') !== expectedCheckoutHash) {
+                window.location = "/";
+            }
+        }, 500);
+    })();
+</script>
+{% endif %}
+{% endblock %}
