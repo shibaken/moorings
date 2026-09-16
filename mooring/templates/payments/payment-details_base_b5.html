@@ -9,7 +9,9 @@
 <script>
     (function() {
         function createCookie(name, value) {
-            document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + "; path=/";
+            // Append '; secure' only on HTTPS to prevent cookies from being rejected in local HTTP development
+            var secureFlag = window.location.protocol === 'https:' ? '; secure' : '';
+            document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + "; path=/" + secureFlag;
         }
 
         function readCookie(name) {

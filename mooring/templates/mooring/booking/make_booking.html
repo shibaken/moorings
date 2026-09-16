@@ -769,7 +769,9 @@
                 } else {
                     expires = "";
                 }
-                document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + expires + "; path=/";
+                // Append '; secure' only on HTTPS to prevent cookies from being rejected in local HTTP development
+                var secureFlag = window.location.protocol === 'https:' ? '; secure' : '';
+                document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + expires + "; path=/" + secureFlag;
             },
             updateLocalStorage: function() {
                 var vm = this;
