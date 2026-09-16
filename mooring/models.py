@@ -1989,6 +1989,11 @@ class Booking(models.Model):
             logger.error(f'Order {inv.order_number} not found for invoice {invoice_reference}')
             raise ValueError(f'Order not found for invoice {invoice_reference}')
         
+        # Verify that the invoice has been paid in full or overpaid
+        if inv.payment_status not in ('paid', 'over_paid'):
+            logger.error(f'Invoice {invoice_reference} for booking {booking.id} is not fully paid (status: {inv.payment_status})')
+            raise ValueError(f'Invoice {invoice_reference} is not fully paid (status: {inv.payment_status})')
+        
         # Verify order belongs to the booking's customer
         if not booking.customer:
             logger.error(f'Booking {booking.id} has no customer')
@@ -2653,6 +2658,11 @@ class AdmissionsBooking(models.Model):
                         f'tried making an admissions booking with an invoice from another system: {inv.system}, '
                         f'invoice reference: {inv.reference}')
             raise ValueError(f'Invoice {invoice_reference} is from wrong system: {inv.system}')
+        
+        # Verify that the invoice has been paid in full or overpaid
+        if inv.payment_status not in ('paid', 'over_paid'):
+            logger.error(f'Invoice {invoice_reference} for admissions booking {booking.id} is not fully paid (status: {inv.payment_status})')
+            raise ValueError(f'Invoice {invoice_reference} is not fully paid (status: {inv.payment_status})')
         
         # Verify invoice ownership via basket booking_reference
         booking_reference = settings.DAILY_ADMISSION_REF_PREFIX + str(booking.id)
