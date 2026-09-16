@@ -4545,7 +4545,7 @@ class BulkPricingView(generics.CreateAPIView):
             print(traceback.print_exc())
             raise serializers.ValidationError(str(e[0]))
 
-class AdmissionsRatesViewSet(viewsets.ModelViewSet):
+class AdmissionsRatesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AdmissionsRate.objects.all()
     renderer_classes = (JSONRenderer,)
     serializer_class = AdmissionsRateSerializer
