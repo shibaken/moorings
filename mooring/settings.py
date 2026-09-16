@@ -288,3 +288,5 @@ DAILY_ADMISSION_REF_PREFIX = decouple.config('DAILY_ADMISSION_REF_PREFIX', 'AD')
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 SESSION_FILE_PATH = decouple.config('SESSION_FILE_PATH', default='/app/session_store/')
+# Whether to use a secure cookie for the session cookie
+SESSION_COOKIE_SECURE = decouple.config('SESSION_COOKIE_SECURE', default=True, cast=bool)
