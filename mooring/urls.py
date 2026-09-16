@@ -18,7 +18,7 @@ from mooring.default_data_manager import DefaultDataManager
 
 # API patterns
 router = routers.DefaultRouter()
-if settings.DEBUG is not True:
+if settings.SHOW_API_ROOT is not True:
     router.include_root_view = False  
 
 #router.register(r'mooring_map', api.MooringAreaMapViewSet)

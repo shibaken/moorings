@@ -14,6 +14,8 @@ from decimal import Decimal
 logger = logging.getLogger(__name__)
 
 DEBUG = decouple.config('DEBUG', default=True, cast=bool)
+# Controls visibility of the DRF API root view, independent of DEBUG
+SHOW_API_ROOT = decouple.config('SHOW_API_ROOT', default=False, cast=bool)
 BASE_DIR = None
 BASE_DIR_ENV = decouple.config('BASE_DIR', default=None)
 if BASE_DIR_ENV is None:
