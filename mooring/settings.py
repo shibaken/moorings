@@ -292,3 +292,7 @@ SESSION_FILE_PATH = decouple.config('SESSION_FILE_PATH', default='/app/session_s
 SESSION_COOKIE_SECURE = decouple.config('SESSION_COOKIE_SECURE', default=True, cast=bool)
 # Whether to use a secure cookie for the CSRF cookie
 CSRF_COOKIE_SECURE = decouple.config('CSRF_COOKIE_SECURE', default=True, cast=bool)
+
+# GDAL and GEOS paths from environment variables for the new base image
+GDAL_LIBRARY_PATH = os.environ.get("GDAL_LIBRARY_PATH")
+GEOS_LIBRARY_PATH = os.environ.get("GEOS_LIBRARY_PATH")
