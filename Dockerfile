@@ -19,7 +19,7 @@ RUN apt-get clean
 RUN apt-get update
 RUN apt-get install --no-install-recommends -y software-properties-common
 RUN apt-get upgrade -y
-RUN apt-get install --no-install-recommends -y curl gnupg wget git libmagic-dev gcc g++ binutils libproj-dev gdal-bin tzdata gpg-agent 
+RUN apt-get install --no-install-recommends -y curl gnupg wget git libmagic-dev gcc g++ binutils libproj-dev tzdata gpg-agent 
 RUN apt update
 
 
