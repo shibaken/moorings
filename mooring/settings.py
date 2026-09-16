@@ -290,3 +290,5 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 SESSION_FILE_PATH = decouple.config('SESSION_FILE_PATH', default='/app/session_store/')
 # Whether to use a secure cookie for the session cookie
 SESSION_COOKIE_SECURE = decouple.config('SESSION_COOKIE_SECURE', default=True, cast=bool)
+# Whether to use a secure cookie for the CSRF cookie
+CSRF_COOKIE_SECURE = decouple.config('CSRF_COOKIE_SECURE', default=True, cast=bool)
