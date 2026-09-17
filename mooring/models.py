@@ -23,6 +23,7 @@ from taggit.managers import TaggableManager
 from django.dispatch import receiver
 from django.db.models.signals import post_delete, pre_save, post_save,pre_delete
 from mooring.exceptions import BookingRangeWithinException
+from mooring.sanitisation import SanitisationModelMixin
 from django.core.cache import cache
 # from ledger.payments.models import Invoice
 # from ledger.accounts.models import EmailUser
@@ -57,7 +58,8 @@ NUMBER_VEHICLE_CHOICES = (
     (3, 'One vehicle + small trailer/large vehicle')
 )
 
-class Contact(models.Model):
+class Contact(SanitisationModelMixin, models.Model):
+    sanitise_exclude_fields = set()
     name = models.CharField(max_length=255, unique=True)
     phone_number = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(max_length=255)
@@ -1382,7 +1384,8 @@ class MooringsiteRate(models.Model):
             setattr(self, attr, value)
         self.save()
 
-class BookingAnnualAdmission(models.Model):
+class BookingAnnualAdmission(SanitisationModelMixin, models.Model):
+    sanitise_exclude_fields = set()
 
     BOOKING_TYPE_CHOICES = (
         (0, 'Reception booking'),
@@ -1452,7 +1455,8 @@ class BookingAnnualInvoice(models.Model):
 
 
 
-class Booking(models.Model):
+class Booking(SanitisationModelMixin, models.Model):
+    sanitise_exclude_fields = set()
     BOOKING_TYPE_CHOICES = (
         (0, 'Reception booking'),
         (1, 'Internet booking'),
@@ -2483,7 +2487,8 @@ class AdmissionsLocation(models.Model):
     def __str__(self):
         return self.text
 
-class AdmissionsBooking(models.Model):
+class AdmissionsBooking(SanitisationModelMixin, models.Model):
+    sanitise_exclude_fields = set()
     BOOKING_TYPE_CHOICES = (
         (0, 'Reception booking'),
         (1, 'Internet booking'),
