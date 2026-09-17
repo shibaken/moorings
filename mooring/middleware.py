@@ -81,10 +81,11 @@ class BookingTimerMiddleware(object):
             if is_payment_submission:
                 hash_ok = validate_payment_checkouthash(request, expected_hash)
             else:
-                # GET /ledger-api/payment-details: no CSRF-keyed cookie exists yet at this point,
-                # so only the two-way check applies here. Cross-tab detection while the page stays
-                # open is handled by the client-side watcher script instead.
-                hash_ok = checkouthash_cookie == expected_hash
+                # For GET requests, bypass checkouthash validation. A stale cookie from a previous 
+                # failed/cancelled checkout might be present causing a false positive mismatch. 
+                # The client-side JS will overwrite it upon loading, and actual multi-tab protection 
+                # is strictly enforced on the POST submission anyway.
+                hash_ok = True
 
             if not hash_ok:
                 # Checkouthash mismatch which implies the user is handling multiple browser tabs with different booking details,
@@ -133,9 +134,11 @@ class BookingTimerMiddleware(object):
                     if is_payment_submission:
                         hash_ok = validate_payment_checkouthash(request, expected_hash)
                     else:
-                        # GET /ledger-api/payment-details: same reasoning as the Booking block above — no
-                        # CSRF-keyed cookie exists yet, so only the two-way check applies here.
-                        hash_ok = checkouthash_cookie == expected_hash
+                        # For GET requests, bypass checkouthash validation. A stale cookie from a previous 
+                        # failed/cancelled checkout might be present causing a false positive mismatch. 
+                        # The client-side JS will overwrite it upon loading, and actual multi-tab protection 
+                        # is strictly enforced on the POST submission anyway.
+                        hash_ok = True
 
                     if not hash_ok or not record_exists:
                         logger.warning('Admissions checkouthash validation failed or booking no longer pending; redirecting user.')

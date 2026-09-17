@@ -1963,6 +1963,10 @@ class Booking(SanitisationModelMixin, models.Model):
         
         logger.info(f'Processing payment notification for booking {self.id}, invoice {invoice_reference}')
         
+        if not invoice_reference:
+            logger.error(f'Missing invoice_reference for booking {self.id}')
+            raise ValueError(f'Missing invoice_reference for booking {self.id}')
+        
         # Lock booking row to prevent race conditions
         booking = Booking.objects.select_for_update().get(id=self.id)
         
@@ -1994,9 +1998,9 @@ class Booking(SanitisationModelMixin, models.Model):
             raise ValueError(f'Order not found for invoice {invoice_reference}')
         
         # Verify that the invoice has been paid in full or overpaid
-        if inv.payment_status not in ('paid', 'over_paid'):
-            logger.error(f'Invoice {invoice_reference} for booking {booking.id} is not fully paid (status: {inv.payment_status})')
-            raise ValueError(f'Invoice {invoice_reference} is not fully paid (status: {inv.payment_status})')
+        if inv.payment_amount < inv.amount:
+            logger.error(f'Invoice {invoice_reference} for booking {booking.id} is not fully paid (amount: {inv.amount}, paid: {inv.payment_amount})')
+            raise ValueError(f'Invoice {invoice_reference} is not fully paid')
         
         # Verify order belongs to the booking's customer
         if not booking.customer:
@@ -2636,6 +2640,10 @@ class AdmissionsBooking(SanitisationModelMixin, models.Model):
         
         logger.info(f'Processing payment notification for admissions booking {self.id}, invoice {invoice_reference}')
         
+        if not invoice_reference:
+            logger.error(f'Missing invoice_reference for admissions booking {self.id}')
+            raise ValueError(f'Missing invoice_reference for admissions booking {self.id}')
+        
         # Lock booking row to prevent race conditions
         booking = AdmissionsBooking.objects.select_for_update().get(id=self.id)
         
@@ -2665,9 +2673,9 @@ class AdmissionsBooking(SanitisationModelMixin, models.Model):
             raise ValueError(f'Invoice {invoice_reference} is from wrong system: {inv.system}')
         
         # Verify that the invoice has been paid in full or overpaid
-        if inv.payment_status not in ('paid', 'over_paid'):
-            logger.error(f'Invoice {invoice_reference} for admissions booking {booking.id} is not fully paid (status: {inv.payment_status})')
-            raise ValueError(f'Invoice {invoice_reference} is not fully paid (status: {inv.payment_status})')
+        if inv.payment_amount < inv.amount:
+            logger.error(f'Invoice {invoice_reference} for admissions booking {booking.id} is not fully paid (amount: {inv.amount}, paid: {inv.payment_amount})')
+            raise ValueError(f'Invoice {invoice_reference} is not fully paid')
         
         # Verify invoice ownership via basket booking_reference
         booking_reference = settings.DAILY_ADMISSION_REF_PREFIX + str(booking.id)
