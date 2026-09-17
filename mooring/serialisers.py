@@ -46,6 +46,7 @@ from mooring.models import (MooringAreaPriceHistory,
 from rest_framework import serializers
 import rest_framework_gis.serializers as gis_serializers
 from drf_extra_fields.geo_fields import PointField
+from mooring.sanitisation import NH3SanitizeSerializerMixin
 
 class DistrictSerializer(serializers.ModelSerializer):
     class Meta:
@@ -90,8 +91,9 @@ class MooringsiteBookingSerializer(serializers.Serializer):
     vessel_size = serializers.IntegerField(default=0)
 
 
-class AdmissionsBookingSerializer(serializers.ModelSerializer):
+class AdmissionsBookingSerializer(NH3SanitizeSerializerMixin, serializers.ModelSerializer):
     """Serializer used by the admissions booking process."""
+    sanitise_exclude_fields = set()
     class Meta:
         model = AdmissionsBooking
         fields = (
@@ -185,7 +187,8 @@ class MooringsiteBookingRangeSerializer(BookingRangeSerializer):
             'campsite'
         )
 
-class ContactSerializer(serializers.ModelSerializer):
+class ContactSerializer(NH3SanitizeSerializerMixin, serializers.ModelSerializer):
+    sanitise_exclude_fields = set()
     class Meta:
         model = Contact
         fields = '__all__'
@@ -554,7 +557,8 @@ class BookingRegoSerializer(serializers.ModelSerializer):
         model = BookingVehicleRego
         fields = ('rego','type','booking', 'entry_fee')
 
-class BookingSerializer(serializers.ModelSerializer):
+class BookingSerializer(NH3SanitizeSerializerMixin, serializers.ModelSerializer):
+    sanitise_exclude_fields = set()
     campground_name = serializers.CharField(source='mooringarea.name',read_only=True)
     campground_region = serializers.CharField(source='mooringarea.region',read_only=True)
     campground_site_type = serializers.CharField(source='mooringarea.site_type',read_only=True)

@@ -31,7 +31,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, BasePermission, IsAuthenticatedOrReadOnly
-# from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import PageNumberPagination
 from datetime import datetime, timedelta
 from collections import OrderedDict
 from django.core.cache import cache
@@ -167,9 +167,15 @@ logger = logging.getLogger(__name__)
 
 
 # API Views
+class DefaultResultsSetPagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class MooringsiteBookingViewSet(viewsets.ModelViewSet):
     queryset = MooringsiteBooking.objects.all()
     serializer_class = MooringsiteBookingSerialiser
+    pagination_class = DefaultResultsSetPagination
 
 class DistrictViewSet(viewsets.ModelViewSet):
     queryset = District.objects.all()
@@ -3169,8 +3175,15 @@ class AdmissionsBookingViewSet(viewsets.ModelViewSet):
 #            recordsTotal = AdmissionsBooking.objects.filter(booking_type__in=[0,1,4],`
             #search = request.GET.get('search[value]') if request.GET.get('search[value]') else None
             search = request.GET.get('search_keyword') if request.GET.get('search_keyword') else None
-            start = request.GET.get('start') if request.GET.get('start') else 0
-            length = request.GET.get('length') if request.GET.get('length') else len(data)
+            start = int(request.GET.get('start', 0))
+            length_param = request.GET.get('length')
+            if length_param == 'all':
+                length = len(data)
+            elif length_param is not None and length_param.isdigit():
+                length = int(length_param)
+            else:
+                # Default to 50 items if length is not explicitly specified to prevent memory exhaustion
+                length = 50
             date_from = datetime.strptime(request.GET.get('arrival'),'%d/%m/%Y').date() if request.GET.get('arrival') else None
             date_to = datetime.strptime(request.GET.get('departure'),'%d/%m/%Y').date() if request.GET.get('departure') else None
             data2 = []
@@ -3390,8 +3403,15 @@ class BookingViewSet(viewsets.ModelViewSet):
             #search = request.GET.get('search[value]')
             search = request.GET.get('search_keyword')
             draw = request.GET.get('draw') if request.GET.get('draw') else None
-            start = request.GET.get('start') if request.GET.get('draw') else 1
-            length = request.GET.get('length') if request.GET.get('draw') else 'all'
+            start = int(request.GET.get('start', 0))
+            length_param = request.GET.get('length')
+            if length_param == 'all':
+                length = 'all'
+            elif length_param is not None and length_param.isdigit():
+                length = int(length_param)
+            else:
+                # Default to 50 items if length is not explicitly specified to prevent memory exhaustion
+                length = 50
             arrival = datetime.strptime(request.GET.get('arrival'),'%d/%m/%Y') if request.GET.get('arrival') else None 
             departure = datetime.strptime(request.GET.get('departure'),'%d/%m/%Y') if request.GET.get('departure') else None 
             campground = request.GET.get('campground')
@@ -4525,7 +4545,7 @@ class BulkPricingView(generics.CreateAPIView):
             print(traceback.print_exc())
             raise serializers.ValidationError(str(e[0]))
 
-class AdmissionsRatesViewSet(viewsets.ModelViewSet):
+class AdmissionsRatesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AdmissionsRate.objects.all()
     renderer_classes = (JSONRenderer,)
     serializer_class = AdmissionsRateSerializer

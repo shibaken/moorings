@@ -895,6 +895,7 @@ export default {
                 campground : vm.filterCampground != 'All' ? vm.filterCampground : '',
                 region : vm.filterRegion != 'All' ? vm.filterRegion : '',
                 canceled: vm.filterCanceled,
+                length: 'all',
             }
              // 'search[value]': vm.$refs.bookings_table.vmDataTable.search()
 
@@ -912,6 +913,7 @@ export default {
                 departure : vm.filterDateToForAdmission != null ? vm.filterDateToForAdmission:'' ,
                 'search[value]': vm.$refs.admissions_table.vmDataTable.search(),
                 canceled: vm.filterCanceled2,
+                length: 'all',
             }
 
             for(var p in obj)

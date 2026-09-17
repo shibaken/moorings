@@ -23,6 +23,7 @@ from taggit.managers import TaggableManager
 from django.dispatch import receiver
 from django.db.models.signals import post_delete, pre_save, post_save,pre_delete
 from mooring.exceptions import BookingRangeWithinException
+from mooring.sanitisation import SanitisationModelMixin
 from django.core.cache import cache
 # from ledger.payments.models import Invoice
 # from ledger.accounts.models import EmailUser
@@ -57,7 +58,8 @@ NUMBER_VEHICLE_CHOICES = (
     (3, 'One vehicle + small trailer/large vehicle')
 )
 
-class Contact(models.Model):
+class Contact(SanitisationModelMixin, models.Model):
+    sanitise_exclude_fields = set()
     name = models.CharField(max_length=255, unique=True)
     phone_number = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(max_length=255)
@@ -1382,7 +1384,8 @@ class MooringsiteRate(models.Model):
             setattr(self, attr, value)
         self.save()
 
-class BookingAnnualAdmission(models.Model):
+class BookingAnnualAdmission(SanitisationModelMixin, models.Model):
+    sanitise_exclude_fields = set()
 
     BOOKING_TYPE_CHOICES = (
         (0, 'Reception booking'),
@@ -1452,7 +1455,8 @@ class BookingAnnualInvoice(models.Model):
 
 
 
-class Booking(models.Model):
+class Booking(SanitisationModelMixin, models.Model):
+    sanitise_exclude_fields = set()
     BOOKING_TYPE_CHOICES = (
         (0, 'Reception booking'),
         (1, 'Internet booking'),
@@ -1959,6 +1963,10 @@ class Booking(models.Model):
         
         logger.info(f'Processing payment notification for booking {self.id}, invoice {invoice_reference}')
         
+        if not invoice_reference:
+            logger.error(f'Missing invoice_reference for booking {self.id}')
+            raise ValueError(f'Missing invoice_reference for booking {self.id}')
+        
         # Lock booking row to prevent race conditions
         booking = Booking.objects.select_for_update().get(id=self.id)
         
@@ -1988,6 +1996,11 @@ class Booking(models.Model):
         except Order.DoesNotExist:
             logger.error(f'Order {inv.order_number} not found for invoice {invoice_reference}')
             raise ValueError(f'Order not found for invoice {invoice_reference}')
+        
+        # Verify that the invoice has been paid in full or overpaid
+        if inv.payment_amount < inv.amount:
+            logger.error(f'Invoice {invoice_reference} for booking {booking.id} is not fully paid (amount: {inv.amount}, paid: {inv.payment_amount})')
+            raise ValueError(f'Invoice {invoice_reference} is not fully paid')
         
         # Verify order belongs to the booking's customer
         if not booking.customer:
@@ -2478,7 +2491,8 @@ class AdmissionsLocation(models.Model):
     def __str__(self):
         return self.text
 
-class AdmissionsBooking(models.Model):
+class AdmissionsBooking(SanitisationModelMixin, models.Model):
+    sanitise_exclude_fields = set()
     BOOKING_TYPE_CHOICES = (
         (0, 'Reception booking'),
         (1, 'Internet booking'),
@@ -2626,6 +2640,10 @@ class AdmissionsBooking(models.Model):
         
         logger.info(f'Processing payment notification for admissions booking {self.id}, invoice {invoice_reference}')
         
+        if not invoice_reference:
+            logger.error(f'Missing invoice_reference for admissions booking {self.id}')
+            raise ValueError(f'Missing invoice_reference for admissions booking {self.id}')
+        
         # Lock booking row to prevent race conditions
         booking = AdmissionsBooking.objects.select_for_update().get(id=self.id)
         
@@ -2653,6 +2671,11 @@ class AdmissionsBooking(models.Model):
                         f'tried making an admissions booking with an invoice from another system: {inv.system}, '
                         f'invoice reference: {inv.reference}')
             raise ValueError(f'Invoice {invoice_reference} is from wrong system: {inv.system}')
+        
+        # Verify that the invoice has been paid in full or overpaid
+        if inv.payment_amount < inv.amount:
+            logger.error(f'Invoice {invoice_reference} for admissions booking {booking.id} is not fully paid (amount: {inv.amount}, paid: {inv.payment_amount})')
+            raise ValueError(f'Invoice {invoice_reference} is not fully paid')
         
         # Verify invoice ownership via basket booking_reference
         booking_reference = settings.DAILY_ADMISSION_REF_PREFIX + str(booking.id)

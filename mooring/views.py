@@ -1508,8 +1508,11 @@ class MakeBookingsView(TemplateView):
         #    result.set_cookie(settings.OSCAR_BASKET_COOKIE_OPEN, basket_cookie)
         return result
 
-class BookingPolicyView(TemplateView):
+class BookingPolicyView(UserPassesTestMixin, TemplateView):
     template_name = 'mooring/dash/booking_policy.html'
+
+    def test_func(self):
+        return is_officer(self.request.user)
 
     def get(self, request, *args, **kwargs):
         context_processor = template_context(self.request)
@@ -3019,8 +3022,23 @@ class AdmissionsBasketCreated(TemplateView):
     def get(request, *args, **kwargs):
         return HttpResponseRedirect(reverse('checkout:index'))
 
-class AdmissionsBookingSuccessView(TemplateView):
+class AdmissionsBookingSuccessView(UserPassesTestMixin, TemplateView):
     template_name = 'mooring/admissions/admission_success.html'
+
+    def test_func(self):
+        try:
+            booking_token = self.kwargs.get('booking_token')
+            booking = AdmissionsBooking.objects.get(uuid=booking_token)
+            if is_officer(self.request.user):
+                return True
+            if self.request.user.is_authenticated and self.request.user.id == booking.customer_id:
+                return True
+            # Allow access for anonymous/guest users who hold the valid active admissions cookie
+            if not self.request.user.is_authenticated and utils.validate_admissions_cookie(self.request, booking):
+                return True
+        except Exception:
+            pass
+        return False
 
     def get(self, request, *args, **kwargs):
         try:
@@ -3110,8 +3128,19 @@ class AdmissionBookingCancelCompletedView(LoginRequiredMixin, TemplateView):
         }
         return render(request, self.template_name, context)
 
-class AnnualAdmissionSuccessView(TemplateView):
+class AnnualAdmissionSuccessView(UserPassesTestMixin, TemplateView):
     template_name = 'mooring/booking/annual-admission-success.html'
+
+    def test_func(self):
+        try:
+            booking = utils.get_annual_admission_session_booking(self.request.session)
+            if is_officer(self.request.user):
+                return True
+            if self.request.user.is_authenticated and self.request.user.id == booking.customer_id:
+                return True
+        except Exception:
+            pass
+        return False
 
     def get(self, request, *args, **kwargs):
         print ("ANNUAL BOOKING SUCCESS ")
@@ -3218,8 +3247,23 @@ class AnnualAdmissionSuccessView(TemplateView):
 
 
     
-class BookingSuccessView(TemplateView):
+class BookingSuccessView(UserPassesTestMixin, TemplateView):
     template_name = 'mooring/booking/success.html'
+
+    def test_func(self):
+        try:
+            booking_token = self.kwargs.get('booking_token')
+            booking = Booking.objects.get(uuid=booking_token)
+            if is_officer(self.request.user):
+                return True
+            if self.request.user.is_authenticated and self.request.user.id == booking.customer_id:
+                return True
+            # Allow access for anonymous/guest users who hold the valid active booking cookie
+            if not self.request.user.is_authenticated and utils.validate_booking_cookie(self.request, booking):
+                return True
+        except Exception:
+            pass
+        return False
 
     def get(self, request, *args, **kwargs):
         try:

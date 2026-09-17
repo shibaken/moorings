@@ -14,6 +14,8 @@ from decimal import Decimal
 logger = logging.getLogger(__name__)
 
 DEBUG = decouple.config('DEBUG', default=True, cast=bool)
+# Controls visibility of the DRF API root view, independent of DEBUG
+SHOW_API_ROOT = decouple.config('SHOW_API_ROOT', default=False, cast=bool)
 BASE_DIR = None
 BASE_DIR_ENV = decouple.config('BASE_DIR', default=None)
 if BASE_DIR_ENV is None:
@@ -286,3 +288,11 @@ DAILY_ADMISSION_REF_PREFIX = decouple.config('DAILY_ADMISSION_REF_PREFIX', 'AD')
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 SESSION_FILE_PATH = decouple.config('SESSION_FILE_PATH', default='/app/session_store/')
+# Whether to use a secure cookie for the session cookie
+SESSION_COOKIE_SECURE = decouple.config('SESSION_COOKIE_SECURE', default=True, cast=bool)
+# Whether to use a secure cookie for the CSRF cookie
+CSRF_COOKIE_SECURE = decouple.config('CSRF_COOKIE_SECURE', default=True, cast=bool)
+
+# GDAL and GEOS paths from environment variables for the new base image
+GDAL_LIBRARY_PATH = os.environ.get("GDAL_LIBRARY_PATH")
+GEOS_LIBRARY_PATH = os.environ.get("GEOS_LIBRARY_PATH")

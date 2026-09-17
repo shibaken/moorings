@@ -46,6 +46,7 @@ mixer==6.1.3
 django-dirtyfields==1.9.3
 python-docx==1.1.2
 docxtpl==0.10.0
+pypdf>=6.16.1
 dj-database-url==0.5.0
 psutil==5.7.0
 jedi==0.17.2
@@ -59,6 +60,7 @@ setuptools==83.0.0
 wheel~=0.46.3
 requests==2.33.1
 pillow>=12.2.0
+nh3==0.2.18
 idna>=3.18
 django-phonenumber-field==8.0.0
 babel~=2.15.0

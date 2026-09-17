@@ -43,9 +43,9 @@
                 {% for message in messages %}
                     {% comment %} <div class="{{ message|bootstrap_message_classes }} alert-dismissable"> {% endcomment %}
                     <div class="alert 
-                        {% if message.tags == 'error' %}alert-danger
-                        {% elif message.tags == 'warning' %}alert-warning
-                        {% elif message.tags == 'success' %}alert-success
+                        {% if 'error' in message.tags %}alert-danger
+                        {% elif 'warning' in message.tags %}alert-warning
+                        {% elif 'success' in message.tags %}alert-success
                         {% else %}alert-info{% endif %}
                         alert-dismissible fade show" role="alert">
                         {{ message|safe }}
