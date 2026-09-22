@@ -8,10 +8,6 @@
     box-sizing: border-box;
 }
 
-#matrix-root .avm-status {
-    font-weight: bold;
-}
-
 #matrix-root .avm-svg {
     font-family: inherit;
 }
@@ -52,6 +48,21 @@
     text-anchor: middle;
     dominant-baseline: middle;
     fill: #212121;
+}
+
+#matrix-root .avm-col-label-dow {
+    font-size: 9px;
+    fill: #616161;
+}
+
+#matrix-root .avm-col-label-day {
+    font-size: 11px;
+    font-weight: bold;
+}
+
+#matrix-root .avm-col-weekend .avm-col-label-dow,
+#matrix-root .avm-col-weekend .avm-col-label-day {
+    fill: #1a4a8a;
 }
 
 #matrix-root .avm-cell {

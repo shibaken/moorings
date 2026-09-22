@@ -8,9 +8,6 @@
 
 {% block content %}
 <div id="matrix-root" class="availability-matrix-container">
-    <h1>Mooring Availability Matrix</h1>
-    <p class="avm-status">Loading D3.js&hellip;</p>
-
     <div class="avm-toolbar">
         <label for="avm-granularity">Granularity:</label>
         <select id="avm-granularity">
@@ -54,8 +51,6 @@
         document.head.appendChild(script);
 
         function onD3Ready() {
-            var statusEl = document.querySelector('#matrix-root .avm-status');
-            statusEl.textContent = 'D3 v' + d3.version + ' loaded OK';
             console.log('D3 v' + d3.version + ' loaded OK');
 
             if (window.MooringMatrix && typeof window.MooringMatrix.init === 'function') {
@@ -70,7 +65,6 @@
                 var treeInit = window.MooringTree.init();
                 if (treeInit && typeof treeInit.then === 'function') {
                     treeInit.catch(function (error) {
-                        statusEl.textContent = 'D3 v' + d3.version + ' loaded OK, but the tree failed to load: ' + error.message;
                         console.error('Availability matrix tree load failed:', error);
                     });
                 }
@@ -82,8 +76,7 @@
         }
 
         function onD3Failed() {
-            var statusEl = document.querySelector('#matrix-root .avm-status');
-            statusEl.textContent = 'D3 failed to load from both CDN and vendored fallback';
+            console.error('D3 failed to load from both CDN and vendored fallback');
         }
     })(
         'https://d3js.org/d3.v7.min.js',

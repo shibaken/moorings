@@ -3,7 +3,7 @@ window.MooringTimeline = (function () {
     var HEADER_HEIGHT = 40;
     var ROW_LABEL_WIDTH = 240; // must match tree.js ROW_WIDTH so axes align
 
-    var COLUMN_WIDTH = { day: 28, week: 50, month: 70 };
+    var COLUMN_WIDTH = { day: 32, week: 50, month: 70 };
     var PAGE_SIZE = { day: 30, week: 26, month: 12 };
 
     var granularity = 'day';
@@ -121,7 +121,28 @@ window.MooringTimeline = (function () {
         colMerge.select('text.avm-col-label')
             .attr('x', columnWidth / 2)
             .attr('y', HEADER_HEIGHT / 2)
-            .text(formatLabel);
+            .each(function (d) {
+                var textSelection = d3.select(this);
+                textSelection.selectAll('tspan').remove();
+
+                if (granularity === 'day') {
+                    // Stack day-of-week and day-number on two lines so short day columns don't collide
+                    textSelection.append('tspan')
+                        .attr('class', 'avm-col-label-dow')
+                        .attr('x', columnWidth / 2)
+                        .attr('dy', '-0.3em')
+                        .text(d3.timeFormat('%a')(d));
+                    textSelection.append('tspan')
+                        .attr('class', 'avm-col-label-day')
+                        .attr('x', columnWidth / 2)
+                        .attr('dy', '1.1em')
+                        .text(d3.timeFormat('%d')(d));
+                } else {
+                    textSelection.append('tspan')
+                        .attr('x', columnWidth / 2)
+                        .text(formatLabel(d));
+                }
+            });
 
         var currentHeight = parseInt(svg.attr('height'), 10) || HEADER_HEIGHT;
         svg.attr('width', ROW_LABEL_WIDTH + columns.length * columnWidth);
