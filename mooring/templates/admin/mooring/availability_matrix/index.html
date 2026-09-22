@@ -38,6 +38,7 @@
 <script src="{% static 'mooring/availability_matrix/js/tree.js' %}"></script>
 <script src="{% static 'mooring/availability_matrix/js/timeline.js' %}"></script>
 <script src="{% static 'mooring/availability_matrix/js/matrix.js' %}"></script>
+<script src="{% static 'mooring/availability_matrix/js/interactions.js' %}"></script>
 <script>
     (function loadD3(cdnUrl, vendoredUrl) {
         var script = document.createElement('script');
@@ -59,6 +60,10 @@
 
             if (window.MooringMatrix && typeof window.MooringMatrix.init === 'function') {
                 window.MooringMatrix.init();
+            }
+
+            if (window.MooringInteractions && typeof window.MooringInteractions.init === 'function') {
+                window.MooringInteractions.init();
             }
 
             if (window.MooringTree && typeof window.MooringTree.init === 'function') {

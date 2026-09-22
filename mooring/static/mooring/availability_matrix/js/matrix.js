@@ -79,6 +79,9 @@ window.MooringMatrix = (function () {
                     key: entry.row.id + ':' + dateKey,
                     rowIndex: entry.index,
                     columnDate: columnDate,
+                    siteId: entry.row.id,
+                    siteName: entry.row.name,
+                    dateLabel: dateKey,
                     status: cell ? cell.status : 'no-data',
                     rate: cell ? cell.rate : null
                 });
@@ -107,7 +110,27 @@ window.MooringMatrix = (function () {
             .attr('x', function (d) { return columnScale(d.columnDate.toISOString()); })
             .attr('y', function (d) { return d.rowIndex * ROW_HEIGHT; })
             .attr('width', columnScale.bandwidth())
-            .attr('height', ROW_HEIGHT);
+            .attr('height', ROW_HEIGHT)
+            .on('mouseover', function (event, d) {
+                if (window.MooringInteractions) {
+                    window.MooringInteractions.showTooltip(event, d);
+                }
+            })
+            .on('mousemove', function (event) {
+                if (window.MooringInteractions) {
+                    window.MooringInteractions.positionTooltip(event);
+                }
+            })
+            .on('mouseout', function () {
+                if (window.MooringInteractions) {
+                    window.MooringInteractions.hideTooltip();
+                }
+            })
+            .on('click', function (event, d) {
+                if (window.MooringInteractions) {
+                    window.MooringInteractions.openModal(d.siteId, d.dateLabel);
+                }
+            });
     }
 
     function init() {
