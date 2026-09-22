@@ -97,6 +97,10 @@ window.MooringTree = (function () {
         var currentWidth = parseInt(svg.attr('width'), 10) || ROW_WIDTH;
         svg.attr('width', currentWidth);
         svg.attr('height', HEADER_HEIGHT + Math.max(visibleRows.length, 1) * ROW_HEIGHT);
+
+        document.dispatchEvent(new CustomEvent('tree:visible-rows-changed', {
+            detail: { rows: getVisibleRows() }
+        }));
     }
 
     function init(options) {

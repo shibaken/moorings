@@ -25,11 +25,19 @@
     </div>
 
     <svg id="matrix-svg" class="avm-svg" width="240" height="24"></svg>
+
+    <div class="avm-legend">
+        <span class="avm-legend-item avm-legend-open">Open</span>
+        <span class="avm-legend-item avm-legend-closed">Closed</span>
+        <span class="avm-legend-item avm-legend-partial">Partial</span>
+        <span class="avm-legend-item avm-legend-no-data">No data</span>
+    </div>
 </div>
 
 <script src="{% static 'mooring/availability_matrix/js/api.js' %}"></script>
 <script src="{% static 'mooring/availability_matrix/js/tree.js' %}"></script>
 <script src="{% static 'mooring/availability_matrix/js/timeline.js' %}"></script>
+<script src="{% static 'mooring/availability_matrix/js/matrix.js' %}"></script>
 <script>
     (function loadD3(cdnUrl, vendoredUrl) {
         var script = document.createElement('script');
@@ -48,6 +56,10 @@
             var statusEl = document.querySelector('#matrix-root .avm-status');
             statusEl.textContent = 'D3 v' + d3.version + ' loaded OK';
             console.log('D3 v' + d3.version + ' loaded OK');
+
+            if (window.MooringMatrix && typeof window.MooringMatrix.init === 'function') {
+                window.MooringMatrix.init();
+            }
 
             if (window.MooringTree && typeof window.MooringTree.init === 'function') {
                 var treeInit = window.MooringTree.init();

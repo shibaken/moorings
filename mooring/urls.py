@@ -123,6 +123,7 @@ api_patterns = [
     # External System API's - END
     #    url(r'^api/admissions_key$', api.AdmissionsKeyFromURLView.as_view(), name='admissions_key'),
     re_path(r'^api/availability-matrix/tree/$', availability_matrix_api.AvailabilityMatrixTreeView.as_view(), name='api-availability-matrix-tree'),
+    re_path(r'^api/availability-matrix/cells/$', availability_matrix_api.AvailabilityMatrixCellsView.as_view(), name='api-availability-matrix-cells'),
     re_path(r'^api/',include(router.urls))
 ]
 # URL Patterns

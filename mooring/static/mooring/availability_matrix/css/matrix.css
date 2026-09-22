@@ -54,6 +54,65 @@
     fill: #212121;
 }
 
+#matrix-root .avm-cell {
+    stroke: #ffffff;
+    stroke-width: 1;
+}
+
+#matrix-root .avm-cell-open {
+    fill: #4caf50;
+}
+
+#matrix-root .avm-cell-closed {
+    fill: #e53935;
+}
+
+#matrix-root .avm-cell-partial {
+    fill: #fb8c00;
+}
+
+#matrix-root .avm-cell-no-data {
+    fill: #bdbdbd;
+}
+
+#matrix-root .avm-legend {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0;
+    font-size: 12px;
+}
+
+#matrix-root .avm-legend-item {
+    padding-left: 18px;
+    position: relative;
+}
+
+#matrix-root .avm-legend-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 12px;
+    height: 12px;
+    border: 1px solid #ffffff;
+}
+
+#matrix-root .avm-legend-open::before {
+    background-color: #4caf50;
+}
+
+#matrix-root .avm-legend-closed::before {
+    background-color: #e53935;
+}
+
+#matrix-root .avm-legend-partial::before {
+    background-color: #fb8c00;
+}
+
+#matrix-root .avm-legend-no-data::before {
+    background-color: #bdbdbd;
+}
+
 #matrix-root .avm-row-bg {
     fill: #ffffff;
     stroke: #e0e0e0;

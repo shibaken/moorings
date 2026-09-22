@@ -22,3 +22,10 @@ class MooringAreaTreeSerialiser(serializers.Serializer):
     def get_sites(self, obj):
         # obj.campsites is prefetched by the view, .all() reuses the cache without extra queries
         return MooringsiteTreeSerialiser(obj.campsites.all(), many=True).data
+
+
+class AvailabilityCellSerialiser(serializers.Serializer):
+    site_id = serializers.IntegerField()
+    date = serializers.DateField()
+    status = serializers.CharField()
+    rate = serializers.CharField(allow_null=True)
