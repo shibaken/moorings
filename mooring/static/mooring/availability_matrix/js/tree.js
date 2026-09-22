@@ -1,8 +1,9 @@
 // Left-axis MooringArea / Mooringsite tree rendered in g.axis-left. Requires window.d3 and window.AvailabilityMatrixAPI.
-window.AvailabilityMatrixTree = (function () {
+window.MooringTree = (function () {
     var ROW_HEIGHT = 24;
     var INDENT_WIDTH = 16;
     var ROW_WIDTH = 240;
+    var HEADER_HEIGHT = 40; // reserved for the timeline header rendered by timeline.js above the rows
 
     var areas = [];
     var visibleRows = [];
@@ -71,7 +72,7 @@ window.AvailabilityMatrixTree = (function () {
         var rowMerge = rowEnter.merge(rowSelection);
 
         rowMerge
-            .attr('transform', function (d, i) { return 'translate(0,' + (i * ROW_HEIGHT) + ')'; })
+            .attr('transform', function (d, i) { return 'translate(0,' + (HEADER_HEIGHT + i * ROW_HEIGHT) + ')'; })
             .classed('avm-row-closed', function (d) { return !d.isOpen; });
 
         rowMerge.select('rect.avm-row-bg')
@@ -93,7 +94,9 @@ window.AvailabilityMatrixTree = (function () {
             .attr('y', ROW_HEIGHT / 2)
             .text(function (d) { return d.name; });
 
-        svg.attr('height', Math.max(visibleRows.length * ROW_HEIGHT, ROW_HEIGHT));
+        var currentWidth = parseInt(svg.attr('width'), 10) || ROW_WIDTH;
+        svg.attr('width', currentWidth);
+        svg.attr('height', HEADER_HEIGHT + Math.max(visibleRows.length, 1) * ROW_HEIGHT);
     }
 
     function init(options) {
