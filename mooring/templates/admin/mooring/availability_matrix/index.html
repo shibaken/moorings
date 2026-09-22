@@ -21,7 +21,24 @@
         <span id="avm-date-label" class="avm-date-label"></span>
     </div>
 
+    <div class="avm-search-box">
+        <label for="avm-search-input">Search moorings:</label>
+        <input type="search" id="avm-search-input" placeholder="Filter by mooring name&hellip;">
+    </div>
+
+    <div class="avm-pagination">
+        <button type="button" id="avm-prev-page">&laquo; Prev page</button>
+        <button type="button" id="avm-next-page">Next page &raquo;</button>
+        <span id="avm-page-info" class="avm-page-info"></span>
+        <label for="avm-page-size">Page size:</label>
+        <select id="avm-page-size">
+            <option value="30">30</option>
+            <option value="50">50</option>
+        </select>
+    </div>
+
     <svg id="matrix-svg" class="avm-svg" width="240" height="24"></svg>
+
 
     <div class="avm-legend">
         <span class="avm-legend-item avm-legend-open">Open</span>

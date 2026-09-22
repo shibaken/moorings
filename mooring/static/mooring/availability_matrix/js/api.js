@@ -29,6 +29,15 @@ window.AvailabilityMatrixAPI = (function () {
         if (params && params.mooring_group) {
             query.set('mooring_group', params.mooring_group);
         }
+        if (params && params.search) {
+            query.set('search', params.search);
+        }
+        if (params && params.page) {
+            query.set('page', params.page);
+        }
+        if (params && params.page_size) {
+            query.set('page_size', params.page_size);
+        }
 
         var url = '/api/availability-matrix/tree/';
         var queryString = query.toString();

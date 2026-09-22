@@ -4,10 +4,18 @@ window.MooringTree = (function () {
     var INDENT_WIDTH = 16;
     var ROW_WIDTH = 240;
     var HEADER_HEIGHT = 40; // reserved for the timeline header rendered by timeline.js above the rows
+    var SEARCH_DEBOUNCE_MS = 300;
 
     var areas = [];
     var visibleRows = [];
     var collapsedAreaIds = {};
+
+    var baseParams = {};
+    var currentSearch = '';
+    var currentPage = 1;
+    var currentPageSize = 30;
+    var pageInfo = { count: 0, totalPages: 0 };
+    var searchDebounceTimer = null;
 
     function flattenTree() {
         var flat = [];
@@ -103,15 +111,115 @@ window.MooringTree = (function () {
         }));
     }
 
-    function init(options) {
-        options = options || {};
-        return window.AvailabilityMatrixAPI.fetchTree({
-            park: options.park,
-            mooring_group: options.mooringGroup
-        }).then(function (data) {
-            areas = data;
+    function renderPaginationControls() {
+        var pageInput = document.getElementById('avm-search-input');
+        if (pageInput && pageInput.value !== currentSearch) {
+            pageInput.value = currentSearch;
+        }
+
+        var pageSizeSelect = document.getElementById('avm-page-size');
+        if (pageSizeSelect && pageSizeSelect.value !== String(currentPageSize)) {
+            pageSizeSelect.value = String(currentPageSize);
+        }
+
+        var prevButton = document.getElementById('avm-prev-page');
+        if (prevButton) {
+            prevButton.disabled = currentPage <= 1;
+        }
+
+        var nextButton = document.getElementById('avm-next-page');
+        if (nextButton) {
+            nextButton.disabled = currentPage >= pageInfo.totalPages;
+        }
+
+        var infoLabel = document.getElementById('avm-page-info');
+        if (infoLabel) {
+            infoLabel.textContent = 'Page ' + currentPage + ' of ' + Math.max(pageInfo.totalPages, 1) +
+                ' (' + pageInfo.count + ' moorings)';
+        }
+    }
+
+    function fetchAndRender() {
+        var params = Object.assign({}, baseParams, {
+            search: currentSearch,
+            page: currentPage,
+            page_size: currentPageSize
+        });
+
+        return window.AvailabilityMatrixAPI.fetchTree(params).then(function (data) {
+            areas = data.results || [];
+            pageInfo = { count: data.count, totalPages: data.total_pages };
+            currentPage = data.current_page;
+            currentPageSize = data.page_size;
+            renderPaginationControls();
             render();
         });
+    }
+
+    function goToPage(page) {
+        if (page < 1 || (pageInfo.totalPages && page > pageInfo.totalPages)) {
+            return;
+        }
+        currentPage = page;
+        fetchAndRender();
+    }
+
+    function setSearch(value) {
+        currentSearch = value;
+        currentPage = 1;
+        fetchAndRender();
+    }
+
+    function setPageSize(pageSize) {
+        currentPageSize = pageSize;
+        currentPage = 1;
+        fetchAndRender();
+    }
+
+    function bindControls() {
+        var searchInput = document.getElementById('avm-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function (event) {
+                var value = event.target.value;
+                if (searchDebounceTimer) {
+                    clearTimeout(searchDebounceTimer);
+                }
+                searchDebounceTimer = setTimeout(function () {
+                    setSearch(value);
+                }, SEARCH_DEBOUNCE_MS);
+            });
+        }
+
+        var prevButton = document.getElementById('avm-prev-page');
+        if (prevButton) {
+            prevButton.addEventListener('click', function () {
+                goToPage(currentPage - 1);
+            });
+        }
+
+        var nextButton = document.getElementById('avm-next-page');
+        if (nextButton) {
+            nextButton.addEventListener('click', function () {
+                goToPage(currentPage + 1);
+            });
+        }
+
+        var pageSizeSelect = document.getElementById('avm-page-size');
+        if (pageSizeSelect) {
+            pageSizeSelect.addEventListener('change', function (event) {
+                setPageSize(parseInt(event.target.value, 10));
+            });
+        }
+    }
+
+    function init(options) {
+        options = options || {};
+        baseParams = {
+            park: options.park,
+            mooring_group: options.mooringGroup
+        };
+        bindControls();
+        return fetchAndRender();
     }
 
     function getVisibleRows() {

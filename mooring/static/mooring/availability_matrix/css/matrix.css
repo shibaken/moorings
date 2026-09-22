@@ -28,6 +28,42 @@
     font-weight: bold;
 }
 
+#matrix-root .avm-search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px 0;
+}
+
+#matrix-root .avm-search-box label {
+    font-weight: bold;
+}
+
+#matrix-root .avm-search-box input[type="search"] {
+    padding: 4px 8px;
+    min-width: 240px;
+}
+
+#matrix-root .avm-pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px 0;
+}
+
+#matrix-root .avm-pagination label {
+    font-weight: bold;
+}
+
+#matrix-root .avm-page-info {
+    margin: 0 8px;
+}
+
+#matrix-root .avm-pagination button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 #matrix-root .avm-col-bg {
     fill: #f5f5f5;
     stroke: #e0e0e0;

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +16,8 @@ from mooring.utils import generate_mooring_rate, get_campsite_availability
 
 MAX_SITE_IDS = 200
 MAX_DATE_SPAN_DAYS = 400
+DEFAULT_TREE_PAGE_SIZE = 30
+MAX_TREE_PAGE_SIZE = 100
 
 
 def _compute_cell_status(area_open, site_open, booking_period_status, bp_result):
@@ -39,11 +42,21 @@ class AvailabilityMatrixTreeView(APIView):
     def get(self, request, *args, **kwargs):
         park = request.query_params.get('park')
         mooring_group = request.query_params.get('mooring_group')
+        search = request.query_params.get('search')
+        page_param = request.query_params.get('page', '1')
+        page_size_param = request.query_params.get('page_size', str(DEFAULT_TREE_PAGE_SIZE))
 
         if park is not None and not park.isdigit():
             return Response({'error': 'park must be an integer'}, status=400)
         if mooring_group is not None and not mooring_group.isdigit():
             return Response({'error': 'mooring_group must be an integer'}, status=400)
+        if not page_param.isdigit() or int(page_param) < 1:
+            return Response({'error': 'page must be a positive integer'}, status=400)
+        if not page_size_param.isdigit() or int(page_size_param) < 1:
+            return Response({'error': 'page_size must be a positive integer'}, status=400)
+
+        page = int(page_param)
+        page_size = min(int(page_size_param), MAX_TREE_PAGE_SIZE)
 
         queryset = MooringArea.objects.all().order_by('name').prefetch_related('campsites')
 
@@ -51,9 +64,21 @@ class AvailabilityMatrixTreeView(APIView):
             queryset = queryset.filter(park_id=park)
         if mooring_group is not None:
             queryset = queryset.filter(mooringareagroup=mooring_group)
+        if search:
+            queryset = queryset.filter(name__icontains=search)
 
-        serialiser = MooringAreaTreeSerialiser(queryset, many=True)
-        return Response(serialiser.data)
+        paginator = Paginator(queryset, page_size)
+        # A page past the last one returns an empty result set rather than a 404, per plan §Phase 6.
+        results = paginator.page(page).object_list if page <= paginator.num_pages else queryset.none()
+
+        serialiser = MooringAreaTreeSerialiser(results, many=True)
+        return Response({
+            'count': paginator.count,
+            'total_pages': paginator.num_pages,
+            'current_page': page,
+            'page_size': page_size,
+            'results': serialiser.data,
+        })
 
 
 class AvailabilityMatrixCellsView(APIView):
