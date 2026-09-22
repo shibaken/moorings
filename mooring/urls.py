@@ -4,7 +4,7 @@ from django.urls import include, re_path
 from django.conf.urls.static import static
 from rest_framework import routers
 from mooring import are_migrations_running, views, api
-from mooring import availability_matrix_views
+from mooring import availability_matrix_views, availability_matrix_api
 from mooring.payment_api import (
     BookingPaymentNotificationView,
     AdmissionsPaymentNotificationView,
@@ -122,6 +122,7 @@ api_patterns = [
    
     # External System API's - END
     #    url(r'^api/admissions_key$', api.AdmissionsKeyFromURLView.as_view(), name='admissions_key'),
+    re_path(r'^api/availability-matrix/tree/$', availability_matrix_api.AvailabilityMatrixTreeView.as_view(), name='api-availability-matrix-tree'),
     re_path(r'^api/',include(router.urls))
 ]
 # URL Patterns

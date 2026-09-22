@@ -12,6 +12,46 @@
     font-weight: bold;
 }
 
+#matrix-root .avm-svg {
+    font-family: inherit;
+}
+
+#matrix-root .avm-row-bg {
+    fill: #ffffff;
+    stroke: #e0e0e0;
+    stroke-width: 1;
+}
+
+#matrix-root .avm-row-site .avm-row-bg {
+    fill: #fafafa;
+}
+
+#matrix-root .avm-row-chevron {
+    font-size: 10px;
+    dominant-baseline: middle;
+    fill: #444444;
+}
+
+#matrix-root .avm-row-label {
+    font-size: 12px;
+    dominant-baseline: middle;
+    fill: #212121;
+}
+
+#matrix-root .avm-row-area .avm-row-label {
+    font-weight: bold;
+}
+
+#matrix-root .avm-row-closed .avm-row-label,
+#matrix-root .avm-row-closed .avm-row-chevron {
+    fill: #b3261e;
+    font-style: italic;
+}
+
+#matrix-root .avm-row-closed .avm-row-bg {
+    fill: #fdecea;
+}
+
 #matrix-root .avm-tooltip {
     position: absolute;
     z-index: 10;

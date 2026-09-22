@@ -10,9 +10,11 @@
 <div id="matrix-root" class="availability-matrix-container">
     <h1>Mooring Availability Matrix</h1>
     <p class="avm-status">Loading D3.js&hellip;</p>
+    <svg id="matrix-svg" class="avm-svg" width="240" height="24"></svg>
 </div>
 
 <script src="{% static 'mooring/availability_matrix/js/api.js' %}"></script>
+<script src="{% static 'mooring/availability_matrix/js/tree.js' %}"></script>
 <script>
     (function loadD3(cdnUrl, vendoredUrl) {
         var script = document.createElement('script');
@@ -31,6 +33,11 @@
             var statusEl = document.querySelector('#matrix-root .avm-status');
             statusEl.textContent = 'D3 v' + d3.version + ' loaded OK';
             console.log('D3 version loaded:', d3.version);
+
+            window.AvailabilityMatrixTree.init().catch(function (error) {
+                statusEl.textContent = 'D3 v' + d3.version + ' loaded OK, but the tree failed to load: ' + error.message;
+                console.error('Availability matrix tree load failed:', error);
+            });
         }
 
         function onD3Failed() {
@@ -43,3 +50,4 @@
     );
 </script>
 {% endblock %}
+
