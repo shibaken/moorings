@@ -4,6 +4,7 @@ from django.urls import include, re_path
 from django.conf.urls.static import static
 from rest_framework import routers
 from mooring import are_migrations_running, views, api
+from mooring import availability_matrix_views
 from mooring.payment_api import (
     BookingPaymentNotificationView,
     AdmissionsPaymentNotificationView,
@@ -174,6 +175,7 @@ urlpatterns = [
     re_path(r'^dashboard/failed-refunds/(?P<pk>[0-9]+)/complete', views.RefundFailedCompleted.as_view(), name='dash-complete_failed_refund'),
     re_path(r'^dashboard/failed-refunds-completed', views.RefundFailedCompletedView.as_view(), name='dash-failed_refunds_completed'),
     re_path(r'^dashboard/failed-refunds', views.RefundFailedView.as_view(), name='dash-failedrefunds'),
+    re_path(r'^dashboard/availability-matrix/$', availability_matrix_views.AvailabilityMatrixView.as_view(), name='dash-availability-matrix'),
     re_path(r'^dashboard/', views.DashboardView.as_view(), name='dash'),
     #url(r'^dashboard/bookingperiods2', views.DashboardView.as_view(), name='dash-bookingperiod2'),
     re_path(r'^booking/abort$', views.abort_booking_view, name='public_abort_booking'),

@@ -1,0 +1,24 @@
+/* Availability Matrix styles - all rules scoped under #matrix-root to avoid leaking into Django Admin CSS */
+#matrix-root {
+    box-sizing: border-box;
+    font-size: 13px;
+}
+
+#matrix-root * {
+    box-sizing: border-box;
+}
+
+#matrix-root .avm-status {
+    font-weight: bold;
+}
+
+#matrix-root .avm-tooltip {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#matrix-root .avm-detail-popup {
+    position: absolute;
+    z-index: 10;
+}
